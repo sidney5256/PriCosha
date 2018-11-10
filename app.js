@@ -36,7 +36,7 @@ app.get('/', function(req, res) {
 	// Clear err once checked
 	req.session.err = null
 	var error = (err !== null); 
-	res.render('index', {error: error, err: err}); 
+	res.render('index', {error: error, err: err});
 });
 
 // Attempting to login
