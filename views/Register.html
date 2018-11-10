@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+    <meta charset="utf-8" />
+    <title>PriCoSha | Register </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.8/semantic.min.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Unica+One" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.8/semantic.min.js"></script>
+
+    <style> 
+      body {
+        background: #EFEFEF;
+      }
+      #register {
+        width: 40vw;
+        height: 55vh;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+        margin: auto;
+      }
+      .ui.header.title {
+        font-family: 'Unica One', cursive;
+        font-size: 65px;
+        color: #FF3B3F;
+        letter-spacing: 3px;
+        margin-bottom: 2px;
+      }
+    </style>
+	</head>
+	<body>
+    <div id="register">
+      <h1 class="ui header center aligned title">PriCoSha </h1>
+      <% if (error) { %>
+        <div class="ui negative message"> <%= err %> </div>
+      <% } %>
+      <form class="ui form" action="/registerAuth" method="POST">
+        <div ui class="ui segment">
+          <div class="two fields">
+            <div class="field">
+              <label> First Name </label>
+              <input type="text" name="first_name" placeholder="First Name" required/>
+            </div>
+            <div class="field">
+              <label> Last Name </label>
+              <input type="text" name="last_name" placeholder="Last Name" required/>
+            </div>
+          </div>
+          <div class="field"> 
+            <label> Username </label>
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="text" name="username" placeholder="Username" required>
+            </div>
+          </div>
+          <div class="field">
+              <label> Password </label>
+              <div class="ui left icon input">
+                  <i class="lock icon"></i>
+                  <input type="password" name="password" placeholder="Password" required/>
+              </div>
+          </div>
+          <input type="submit" value="Sign Up" class="ui fluid compact large register button" style="background:#CAEBF2; margin-bottom: 10px"/>
+          <a href="/"><div class="ui fluid compact large login button" style="background:#A9A9A9; color: white"> Go Back To Login Page </div></a>
+        </div>
+      </form>
+    </div>
+	</body>
+</html>
