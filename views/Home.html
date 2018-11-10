@@ -1,0 +1,322 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+    <meta charset="utf-8" />
+    <title>PriCoSha</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Patua+One|Unica+One" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.js"></script>
+
+    <style>
+    	body {
+    		background: #EFEFEF;
+        margin, padding: 0;
+    	}
+    	#header {
+    		padding: 10px;
+    		background: white;
+    	}
+    	.ui.header.title {
+    		font-family: 'Unica One', cursive;
+    		width: 75vw;
+    		margin: auto;
+    		color: #FF3B3F;
+				letter-spacing: 3px;
+    	}
+    	.shortcuts {
+    		float: right;
+    		color: gray;
+    	}
+    	.shortcuts .icon {
+    		cursor: pointer;
+    	}
+    	.greeting {
+    		width: 35vw;
+    		text-align: center;
+    		margin: auto;
+    		padding: 20px;
+    		background: #CAEBF2;
+    		border-radius: 2px;
+    		border: solid 2px white;
+    		margin-top: 20px;
+    	}
+    	.greeting .ui.header {
+    		font-family: 'Patua One', cursive;
+    		color: #A9A9A9;
+    	}
+    	.user-actions .ui.basic.button {
+    		box-shadow: 0 0 0 1px #FF3B3F inset;
+    		background: white !important;
+        margin: 5px;
+    	}
+      #content-modal, 
+      #friendGroup-modal {
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+      }
+      #share {
+        display: none;
+      }
+      #content-modal.active, 
+      #friendGroup-modal.active,
+      #share.active {
+        display: block;
+      }
+      .ui.segment.content,
+      .ui.segment.create {
+        width: 50%;
+        margin: 75px auto;
+      }
+      .ui.segment.content-image {
+        width: 100%;
+        height: 100%;
+      }
+      .ui.grid.contents {
+        padding: 10px;
+        margin: 20px;
+      }
+      #success-message {
+        width: 50%;
+        margin: 15px auto;
+      }
+      #success-message.closed {
+        display: none;
+      }
+      .window.close.outline.icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+      }
+      .window.close.outline.icon:hover {
+        color: #CAEBF2;
+      }
+      .ui.basic.small.blue.label {
+        margin-top: 5px;
+      }
+  	</style>
+  </head>
+  <body>
+  	<div id="header">
+  		<h1 class="ui header title"> <a href="/home" style="color: #FF3B3F"> PriCoSha </a> 
+  			<div class="shortcuts">
+	  			<a href="/FriendGroups"><i class="users icon"></i></a>
+	  			<a href="/home"><i class="home icon"></i></a>
+	  			<a href="/logout"><i class="sign out icon"></i></a>
+	  		</div>
+  		</h1>
+  	</div>
+  	<div id="content">
+      <!-- Success Modal -->
+      <% if (typeof success !== 'undefined' && success !== null) { %>
+        <div id="success-message" class="ui positive message">
+          <i class="close icon"></i>
+          <div class="header"> Successful Submission </div>
+          <p> <%= success %></p>
+        </div>
+      <% } %>
+
+  		<div class="greeting">
+  			<h1 class="ui header"> Hello <%= username %> </h1>
+  			<div class="user-actions">
+  				<div onclick="toggleModal('content-modal')" class="ui compact labeled icon basic button">
+  				  <i class="upload icon"></i> Share Content
+  				</div>
+  				<div onclick="toggleModal('friendGroup-modal')" class="ui compact labeled icon basic button">
+  					<i class="add square icon"></i> Create FriendGroup 
+  				</div>
+  			</div>
+  		</div>
+  		<div class="ui centered grid contents">
+        <% if (typeof contents !== 'undefined') { %>
+          <% contents.forEach((content) => { %>
+            <div class="four wide column">
+              <div class="ui segment content-image">
+                <!-- content.username = poster of content -->
+                <h3 class="ui dividing header"> 
+                  <i class="camera retro icon"></i> 
+                  <%= content.username %> 
+                </h3>
+                <a href="/content/<%= content.id%>">
+                  <img class="ui fluid image content" src="<%= content.file_path %>"/>
+                </a>
+                <div class="ui divider"> </div>
+                <div class="content-info"> 
+                  <!-- content.content_name = caption of content -->
+                  <b> <%= content.content_name %> </b> <br/>
+                  Content ID: <%= content.id %> <br/>
+                  Posted at: <%= content.timest %> <br/>
+                  Shared from: 
+                  <% if (content.group_name !== null) { %>
+                  <!-- content.group_name = array of FriendGroups content is shared to -->
+                    <% (content.group_name).forEach((groupName, index) => { %>
+                      <a href="/home/<%= content.username_creator[index]%>/<%= groupName %>" class="ui basic small blue label"> <%= groupName %> </a>
+                    <% }) %>
+                    <% if (content.public === 1) { %>
+                      <a href="/home/content/public" class="ui basic small blue label"> Public </a>
+                    <% } %>
+                  <% } else { %>
+                    <a href="/home/content/public" class="ui basic small blue label"> Public </a>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+  		</div>
+      
+      <!-- Add Content Modal -->
+      <div id="content-modal">
+        <div class="ui segment content"> 
+          <h2 class="ui dividing header">Share Content</h2>
+          <i onclick="toggleModal('content-modal')" class="window close outline large icon"></i>
+          <form class="ui form" action="/share-content" method="POST">
+            <div class="required field">
+              <label> URL </label>
+              <input type="text" name="file_path" placeholder="Paste a URL">
+            </div>
+            <div class="field">
+              <label> Caption </label>
+              <input maxlength="50" name="content_name" placeholder="Your text here">
+            </div>
+            <div class="inline field">
+              <% if (groups === null) { %>
+              <div class="ui negative small message">
+                Content will be made public since you have no FriendGroups to share with
+              </div>
+              <% } else { %>
+              <div class="ui toggle checkbox">
+                <input onclick="toggleModal('share')" type="checkbox" id="isPrivate" name="isPrivate">
+                <label for="private">Make content private? </label>
+              </div>
+              <% } %>
+            </div>  
+            <!-- Share with which FriendGroups Modal -->
+            <div id="share" class="ui segment">
+              <div class="required field">
+                <label> Share with which FriendGroup(s)? </label>
+                <div class="field">
+                  <% if (groups !== null) { %>
+                    <% groups.forEach(group => { %>
+                      <div class="item">
+                        <div class="ui checkbox" style="padding: 3px">
+                          <input type="checkbox" id="group_name" name="group_name" value="<%= group.group_name %>:<%= group.username_creator%>">
+                          <label for="group_name"> <%= group.group_name %> (Created by: <b> <%= group.username_creator %> </b>)</label>
+                        </div>
+                      </div>
+                    <% }) %>
+                  <% } %>
+                </div>
+              </div>
+            </div> 
+            <!-- End of Share with which FriendGroups Modal -->
+            <div class="ui divider"></div>
+            <div class="user-actions">
+              <input formaction="/share-content" type="submit" value="Share" class="ui primary right floated submit button">
+              <div onclick="toggleModal('content-modal')" class="ui button"> Cancel </div>
+            </div>   
+          </form>
+        </div>
+      </div>
+      <!-- FriendGroup Modal -->
+      <% if (error) { %>
+      <div id="friendGroup-modal" class="active">
+      <% } else { %>
+      <div id="friendGroup-modal">
+      <% } %> 
+        <div class="ui segment create">
+          <h2 class="ui dividing header">Create a FriendGroup</h2>
+          <i onclick="toggleModal('friendGroup-modal')" class="window close outline large icon"></i>
+          <% if (error) { %>
+            <div class="ui negative message"> 
+              <ul class="list">
+                <% err.forEach(errString => { %>
+                  <% if (errString !== null) { %>
+                    <li> <%= errString %> </li>
+                  <% } %>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
+          <form class="ui form" action="/create-group" method="POST">
+            <div class="required field">
+              <label> Name of FriendGroup </label>
+              <input type="text" name="group_name" placeholder="Enter name of FriendGroup">
+            </div>
+            <div class="field">
+              <label> Description </label>
+              <textarea rows="2" name="description" placeholder="Enter a description of your FriendGroup here"></textarea>
+            </div>
+            <div class="required field">
+              <label> Add people to your group </label>
+              <div class="ui fluid selection search dropdown multiple">
+                <input name="members" type="hidden">
+                <div class="default text">Add members by username</div>
+              </div>
+            </div>
+            <div class="ui divider"></div>
+            <div class="user-actions">
+              <input formaction="/create-group" type="submit" value="Create" class="ui primary right floated submit button">
+              <div onclick="toggleModal('friendGroup-modal')" class="ui button"> Cancel </div>
+            </div>
+          </form>
+        </div>
+      </div>
+  	</div>
+    <script>
+      function toggleModal(id) {
+        var modal = document.getElementById(id);
+        modal.classList.toggle("active");
+      }
+      function filterContent(groupName) {
+        var contents = <%- JSON.stringify(contents) %>;
+        var hideContents;
+        if (groupName === 'public') {
+          hideContents = contents.filter((content) => content.public !== 1);
+        } else {
+          hideContents = contents.filter((content) => content.group_name !== groupName);
+        }
+        var className; 
+        hideContents.forEach((content) => {
+          if (content.public === 1) {
+            className = '.public';
+          } else {
+            className = getClassNameFromGroupName(content.group_name);
+          }
+          $('.four.wide.column' + className).hide();
+        })
+      }
+      function getClassNameFromGroupName(groupName) {
+        var classNamesArray = groupName.split(' ');
+        var className = ''
+        classNamesArray.forEach((name) => {
+          className = '.' + name; 
+        })
+        return className; 
+      }
+    </script>
+    <script>
+      $(document).ready(function() {
+        $('.ui.dropdown').dropdown({
+          allowAdditions: true
+        });
+        $('.message .close').on('click', function() {
+          $(this).closest('.message').transition('fade');
+        });
+        $(document).on("keypress", 'form', function (e) {
+          var code = e.keyCode || e.which;
+          if (code == 13) {
+            e.preventDefault();
+            return false;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
