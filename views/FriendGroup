@@ -1,0 +1,388 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+    <meta charset="utf-8" />
+    <title>PriCoSha</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Patua+One|Unica+One" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.js"></script>
+	  <style>
+    	body {
+    		background: #EFEFEF;
+        margin, padding: 0;
+    	}
+    	#header {
+    		padding: 10px;
+    		background: white;
+    	}
+    	.ui.header.title {
+    		font-family: 'Unica One', cursive;
+    		width: 75vw;
+    		margin: auto;
+    		color: #FF3B3F;
+				letter-spacing: 3px;
+    	}
+    	.shortcuts {
+    		float: right;
+    		color: gray;
+    	}
+    	.shortcuts .icon {
+    		cursor: pointer;
+    	}
+      #content {
+        padding: 10px;
+        width: 75%;
+        margin: auto;
+      }
+      .friendGroup {
+        display: inline-block;
+      }
+      .groups-owned, 
+      .groups-member,
+      .pending-tags {
+        margin: 10px;
+        padding: 10px;
+      }
+      #edit-modal {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+      }
+      #edit-modal.active {
+        display: block;
+      }
+      .ui.segment.edit {
+        width: 40%;
+        margin: 75px auto;
+      }
+      .window.close.outline.icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+      }
+      .window.close.outline.icon:hover,
+      .ui.edit.icon:hover {
+        color: #CAEBF2;
+      }
+      .ui.edit.icon {
+        position: absolute;
+        right: 5px;
+        top: 10px;
+        cursor: pointer;
+      }
+      #add-username, 
+      #add-name {
+        display: none;
+      }
+      .ui.form .grouped.fields .field {
+        margin: 0.5em 0.3em;
+      }
+      #remove-field .field {
+        display: none;
+      }
+      #success-message {
+        width: 50%;
+        margin: 15px auto;
+      }
+      #success-message.closed {
+        display: none;
+      }
+ 	  </style>
+	</head>
+  <body>
+   	<div id="header">
+  		<h1 class="ui header title"> <a href="/home" style="color: #FF3B3F"> PriCoSha </a>
+  			<div class="shortcuts">
+	  			<a href="/FriendGroups"><i class="users icon"></i></a>
+	  			<a href="/home"><i class="home icon"></i></a>
+	  			<a href="/logout"><i class="sign out icon"></i></a>
+	  		</div>
+  		</h1>
+  	</div>
+    <div id="content">
+      <!-- Success Modal -->
+      <% if (typeof success !== 'undefined' && success !== null) { %>
+        <div id="success-message" class="ui positive message">
+          <i class="close icon"></i>
+          <div class="header"> Successful Submission </div>
+          <p> <%= success %></p>
+        </div>
+      <% } %>
+      <div class="pending-tags">
+        <h3 class="ui header"> Pending Tags </h3>
+        <% if (pendingTags !== null) { %>
+        <div class="ui cards">
+          <% pendingTags.forEach((tag) => { %>
+            <div class="card fluid">
+              <div class="content">
+                <div class="header"> 
+                  <%= tag.username_tagger %> wants to tag you in a <a href="/content/<%=tag.id%>"> post </a>
+                </div>
+                <div class="meta"> Tagged at <%= tag.timest %> </div>
+                <div class="ui divider"></div>
+                <div class="extra content">
+                  <form action="/FriendGroups" method="POST">
+                    <div class="ui two buttons">
+                      <input formaction="/tag/<%=tag.id%>" type="submit" value="Approve" name="tag-status" class="ui basic green button">
+                      <input formaction="/tag/<%=tag.id%>" type="submit" value="Decline" name="tag-status" class="ui basic red button">
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+          <p> You have no pending tags that need approval. </p>
+        <% } %>
+      </div>
+      <div class="groups-owned">
+        <h3 class="ui header"> FriendGroups You Have Created: </h3>
+        <% if (ownedByUser.length > 0) { %>
+        <div class="ui cards">
+          <% ownedByUser.forEach((group) => { %>
+            <div class="friendGroup card">
+              <div class="content">
+                <div class="header"> <%= group.group_name %> </div>
+                <div class="description"> <%= group.description %></div>
+              </div>
+              <div class="members content">
+                  <h4 class="ui sub header"> Members : </h4>
+                  <ul class="ui list">
+                    <% allGroupMembers.forEach((membersGroup) => { %>
+                      <% if (membersGroup.groupName === group.group_name && membersGroup.creator === group.username_creator) { %>
+                        <% membersGroup.groupMembers.forEach((member) => { %>
+                          <li> <%= member.first_name %> <%= member.last_name %> (<a>@<%= member.username %></a>) </li>
+                        <% }) %>
+                      <% } %>
+                    <% }) %>
+                  </ul>
+              </div>
+              <div class="extra content">
+                <div class="ui two buttons">
+                  <div onclick="toggleEditModal('edit-modal', '<%=group.group_name%>', 'add')" class="ui basic green button">
+                    <i class="add user icon"></i> Add </div>
+                  <div onclick="toggleEditModal('edit-modal', '<%=group.group_name%>', 'remove')" class="ui basic red button"> 
+                    <i class="remove user icon"></i> Remove </div> 
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+          <p> You have not created any FriendGroups. </p>
+        <% } %>
+      </div>
+      <div class="groups-member">
+        <h3 class="ui header"> FriendGroups You Are a Member Of </h3>
+        <% if (memberOfGroup.length > 0) { %>
+        <div class="ui cards">
+          <% memberOfGroup.forEach((group) => { %>
+            <div class="friendGroup card">
+              <div class="content">
+                <div class="header"> <%= group.group_name %> </div>
+                <div class="meta"> Created by <%= group.username_creator %> </div>
+                <div class="description"> <%= group.description %> </div>
+              </div>
+              <div class="members content">
+                <h4 class="ui sub header"> Members : </h4>
+                <ul class="ui list">
+                  <% allGroupMembers.forEach((membersGroup) => { %>
+                    <% if (membersGroup.groupName === group.group_name && membersGroup.creator === group.username_creator) { %>
+                      <% membersGroup.groupMembers.forEach((member) => { %>
+                        <li> <%= member.first_name %> <%= member.last_name %> (<a>@<%= member.username %></a>) </li>
+                      <% }) %>
+                    <% } %>
+                  <% }) %>
+                </ul>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+          <p> You are not a member of any FriendGroups. </p>
+        <% } %>
+      </div>
+      <!-- Edit FriendGroup Modal -->
+      <% if (error === true) { %>
+      <div id="edit-modal" class="active">
+      <% } else { %>
+      <div id="edit-modal">
+      <% } %>
+        <div class="ui segment edit">
+          <h2 class="ui dividing header"> Edit FriendGroup </h2>
+          <i onclick="cancelEditModal('edit-modal')" class="window close outline large icon"></i>
+          <% if (error) { %>
+            <div class="ui negative message"> 
+              <ul class="list">
+                <% err.forEach(errString => { %>
+                  <% if (errString !== null) { %>
+                    <li> <%= errString %> </li>
+                  <% } %>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
+          <form class="ui form" action="/edit-friendGroup" method="POST">
+            <div class="inline field">
+              <label class="friend-group"> 
+                <% if (action !== null) { %>
+                  <% if (action[0] === 'add') { %>
+                    Adding a New Member to the FriendGroup: 
+                  <% } else { %>
+                    Removing a Member From the FriendGroup: 
+                  <% } %>
+                <% } %>
+              </label>
+              <% if (action !== null) { %>
+                <input class="ui fluid" name="friend-group" value="<%= action[1] %>" readonly="" type="text">
+              <% } else { %>
+                <input name="friend-group" readonly="" type="text">
+              <% } %>
+            </div>
+            <div class="ui hidden fitted divider"></div>
+            <div class="add-user grouped required fields">
+              <label> How do you want to add a new member? </label>
+              <div class="field">
+                <div class="ui radio checkbox username">
+                  <input type="radio" name="method" value="username">
+                  <label> Add member(s) by username </label>
+                </div>
+              </div>
+              <div class="field">
+                <div id="add-username" class="ui fluid selection search dropdown multiple">
+                  <input name="members" type="hidden">
+                  <div class="default text">Add new member by username</div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="ui radio checkbox name">
+                  <input type="radio" name="add-method" value="name">
+                  <label> Add a member by name </label>
+                </div>
+              </div>
+              <div id="add-name">
+                <div class="two fields">
+                  <div class="field">
+                    <input name="member[first-name]" type="text" placeholder="First Name">
+                  </div>
+                  <div class="field">
+                    <input name="member[last-name]" type="text" placeholder="Last Name">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Remove user -->
+            <div id="remove-field">
+              <% allGroupMembers.forEach((group) => { %>
+                <div class="<%= group.groupName %> field">
+                  <label> Members: </label>
+                <% for (var member of group.groupMembers) { %>
+                  <% if (member['username'] !== username) { %>
+                  <div class="item">
+                    <div class="ui checkbox" style="padding: 3px">
+                      <input type="checkbox" id="remove-member" name="remove-member" value="<%= member['username']%>">
+                      <label for="group_name"> <%= member['first_name']%> <%= member['last_name'] %> (<a> @<%= member['username']%> </a>)</label>
+                    </div>
+                  </div>
+                  <% } %>
+                <% } %>
+                </div>
+              <% }) %>
+            </div>
+            <div class="ui divider"></div>
+            <div class="user-actions">
+              <% if (action !== null) { %>
+                <% if (action[0] === 'add') { %>
+                  <input formaction="/add-member" type="submit" value="Add" id="add-user" class="ui primary right floated submit button">
+                <% } else { %>
+                  <input formaction="/remove-member" type="submit" value="Remove" id="remove-user" class="ui primary right floated submit button">
+                <% } %>
+              <% } else { %>
+                <input formaction="/add-member" type="submit" value="Add" id="add-user" class="ui primary right floated submit button">
+                <input formaction="/remove-member" type="submit" value="Remove" id="remove-user" class="ui primary right floated submit button">
+              <% } %>
+              <div onclick="cancelEditModal('edit-modal')" class="ui button"> Cancel </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+      var currentGroupClassName = ""; 
+      function cancelEditModal(id) {
+        var modal = document.getElementById(id);
+        modal.classList.toggle("active");
+        $(".ui.radio.checkbox").checkbox('uncheck');
+        $("#add-username").hide();
+        $("#add-name").hide();
+        $('.ui.form .grouped.fields.add-user').hide();
+        $(currentGroupClassName).hide();
+      }
+      function toggleEditModal(id, groupName, action) {
+        var modal = document.getElementById(id);
+        displayContent(modal, groupName, action);
+        modal.classList.toggle("active");
+      }
+      function displayContent(element, groupName, action) {
+        var label = $("#edit-modal label.friend-group");
+        var input = $("#edit-modal input[name=friend-group]");
+        if (action === "add") {
+          label.html("Adding a New Member to the FriendGroup: ");
+          input.val(groupName);
+          $('#add-user').show();
+          $('#remove-user').hide();
+          $('#remove-field').hide();
+          $('.ui.form .grouped.fields.add-user').show();
+        } else {
+          label.html("Removing a Member From the FriendGroup: ");
+          input.val(groupName);
+          var classNames = groupName.split(' '); 
+          currentGroupClassName = "";
+          classNames.forEach((name) => {
+            currentGroupClassName += "." + name;
+          })
+          currentGroupClassName += ".field";
+          $('.ui.form .grouped.fields.add-user').hide();
+          $('#add-user').hide();
+          $('#remove-user').show();
+          $('#remove-field').show();
+          $(currentGroupClassName).show();
+        }
+      }
+    </script>
+    <script>
+      $(document).ready(function() {
+        $('.ui.dropdown').dropdown({
+          allowAdditions: true
+        });
+        $(document).on("keypress", 'form', function (e) {
+          var code = e.keyCode || e.which;
+          if (code == 13) {
+            e.preventDefault();
+            return false;
+          }
+        });
+        $('.ui.radio.checkbox.username').click(function() {
+          $('.ui.radio.checkbox.name').checkbox('uncheck');
+          $('#add-username').show();
+          $('#add-name').hide();
+        });
+        $('.ui.radio.checkbox.name').click(function() {
+          $('.ui.radio.checkbox.username').checkbox('uncheck');
+          $('#add-name').show();
+          $('#add-username').hide();
+        });
+        $('.message .close').on('click', function() {
+          $(this).closest('.message').transition('fade');
+        });
+      });
+    </script>
+  </body>
+</html>
