@@ -39,7 +39,6 @@ CREATE TABLE Comment(
 	FOREIGN KEY (username) REFERENCES Person(username)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-
 CREATE TABLE FriendGroup(
 	group_name VARCHAR (50),
 	username VARCHAR (50),
