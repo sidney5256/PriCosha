@@ -1,0 +1,22 @@
+{
+  "name": "pricosha",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sidney Elie-Pierre",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "ejs": "^2.5.7",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "gulp": "^3.9.1",
+    "md5": "^2.2.1",
+    "mysql": "^2.15.0",
+    "node.js": "0.0.0",
+    "semantic-ui": "^2.2.13"
+  }
+}
